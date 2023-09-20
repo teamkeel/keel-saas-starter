@@ -1,0 +1,137 @@
+// User Model
+model User {
+    fields {
+        identity Identity @unique
+        name Text
+        email Text
+        teams TeamMembership[]
+        documents Document[]
+    }
+
+    actions {
+        get me() {
+            @where(user.identity == ctx.identity)
+        }
+        list listUsers() {
+            @where(user.identity == ctx.identity)
+        }
+        delete deleteUser(id)
+        create createUser() with (name, email) {
+            @set(user.identity = ctx.identity)
+            @permission(expression: ctx.isAuthenticated)
+        }
+        update updateUser(id) with (name?, email?)
+    }
+
+    @permission(
+        actions: [get, update, list, delete],
+        expression: user.identity == ctx.identity
+    )
+}
+
+// Team Model
+model Team {
+    fields {
+        name Text
+        description Text?
+        members TeamMembership[]
+        documents Document[]
+    }
+
+    actions {
+        get getTeam(id)
+        list listTeams() {
+            @where(ctx.identity in team.members.user.identity)
+        }
+        delete deleteTeam(id)
+        update updateTeam(id) with (name?, description?)
+    }
+
+    @permission(
+        actions: [get, list, update, delete],
+        expression: ctx.identity in team.members.user.identity
+    )
+}
+
+// Team Membership Model
+model TeamMembership {
+    fields {
+        user User
+        team Team
+    }
+
+    actions {
+        create createTeam() with (team.name, team.description, user.id) {
+            @permission(expression: ctx.isAuthenticated)
+        }
+    }
+}
+
+// Document Model
+model Document {
+    fields {
+        title Text
+        content Text
+        user User
+        team Team?
+    }
+
+    actions {
+        get getDocument(id, user.id) {
+            @permission(expression: document.user.identity == ctx.identity)
+        }
+        list listDocuments(user.id?, team.id?) {
+            @where(document.user.identity == ctx.identity or ctx.identity in document.team.members.user.identity)
+        }
+        delete deleteDocument(id, user.id?, team.id?) {
+            @permission(expression: document.user.identity == ctx.identity)
+        }
+        create createDocument() with (title, content, team.id?, user.id) {
+            @permission(expression: ctx.isAuthenticated)
+            @set(document.user.identity.id = ctx.identity.id)
+        }
+        update updateDocument(id) with (title?, content?, team.id?, user.id?)
+    }
+
+    @permission(
+        actions: [get, list, update, delete],
+        expression: document.user.identity == ctx.identity or ctx.identity in document.team.members.user.identity
+    )
+}
+
+// Profile Image Model
+model ProfileImage {
+    fields {
+        path Text @unique
+        user User?
+        team Team?
+    }
+
+    actions {
+        get getImage(id) {
+            @permission(expression: ctx.identity == profileImage.user.identity)
+        }
+        list listImages() {
+            @where(ctx.identity == profileImage.user.identity)
+        }
+        delete deleteImage(id)
+        write uploadImageToCloudinary(UploadImageInput) returns (
+            UploadImageResponse
+        )
+    }
+
+    @permission(
+        actions: [get, delete, list],
+        expression: profileImage.user.identity == ctx.identity or ctx.identity in profileImage.team.members.user.identity
+    )
+}
+
+message UploadImageInput {
+    base64Image Text
+    userId ID
+    teamId ID?
+}
+
+message UploadImageResponse {
+    path Text
+}
