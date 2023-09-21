@@ -115,7 +115,7 @@ model ProfileImage {
         }
         delete deleteImage(id)
         write uploadImageToCloudinary(UploadImageInput) returns (
-            UploadImageResponse,
+            UploadImageResponse
         )
     }
 
