@@ -88,7 +88,6 @@ model Document {
         }
         create createDocument() with (title, content, team.id?, user.id) {
             @permission(expression: ctx.isAuthenticated)
-            @set(document.user.identity.id = ctx.identity.id)
         }
         update updateDocument(id) with (title?, content?, team.id?, user.id?)
     }
@@ -116,7 +115,7 @@ model ProfileImage {
         }
         delete deleteImage(id)
         write uploadImageToCloudinary(UploadImageInput) returns (
-            UploadImageResponse
+            UploadImageResponse,
         )
     }
 
