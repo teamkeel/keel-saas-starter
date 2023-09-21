@@ -7,7 +7,7 @@ This is the accompanying code for the SaaS project in the Keel Advanced Tutorial
 To run this project locally, follow these steps:
 
 - Clone the repo
-- set the secrets in the `keelconfig.yaml` file locally by running `keel secrets set <env> <name> <value>`
+- Set the secrets in the `keelconfig.yaml` file locally by running `keel secrets set <env> <name> <value>`
 - Run `keel generate` to scaffold the custom functions and allow keel set the new secrets into context
 - Run `keel run` to interact with the project locally
 
